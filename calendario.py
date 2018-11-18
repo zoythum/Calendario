@@ -12,7 +12,7 @@ def obtain_birthdays():
 	i = 0
 	k = 0
 	
-	with open('percorso del file .ics di partenza') as file:
+	with open('percorso del file .txt di partenza') as file:
 		content = [line.rstrip('\n') for line in file]	
 
 	while i < len(content):
