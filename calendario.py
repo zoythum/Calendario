@@ -1,5 +1,6 @@
 from icalendar import Calendar, Event
 from datetime import datetime
+from dialog import Dialog
 import pytz
 
 def save_cal(calendar):
@@ -28,28 +29,31 @@ def obtain_birthdays():
 
 	return(compleanni)
 
-def populate_calendar(compleanni, calendar):
 
+def populate_calendar(compleanni, calendar, main_dialog):
 	timezone = pytz.timezone('Europe/Rome')
-	for keys in compleanni:
-		nome_festeggiato = keys.replace("Compleanno di ", "")
-		to_add = input("vuoi aggiungere il compleanno di {}? (y/n)".format(nome_festeggiato))	
+	nomi_festeggiati = []
+	for y in compleanni:
+		nome_festeggiato = y.replace("Compleanno di ", "")
+		nomi_festeggiati.append(nome_festeggiato)
+	code, tags = main_dialog.checklist("Seleziona quali compleanni vuoi salvare", choices=[("{}".format(x), "", False) for x in nomi_festeggiati])
 
-		if (to_add == 'y'):
-			print("Ok, lo aggiungo\n")
+	if (code == main_dialog.OK):
+		for elem in tags:
+			nome_festeggiato = "Compleanno di " + elem
 			event = Event()
-			event.add('summary', keys)
-			month, day = convert_date(compleanni[keys])
+			event.add('summary', nome_festeggiato)
+			month, day = convert_date(compleanni[nome_festeggiato])
 			data_inizio = datetime(2019, int(month), int(day), 10, 00, tzinfo=timezone)
 			data_fine = datetime(2019, int(month), int(day), 11, 00, tzinfo=timezone)
 			event.add('dtstart', data_inizio)
 			event.add('dtend', data_fine)
 			calendar.add_component(event)
-		elif (to_add == 'n'):
-			print("Va bene, non sarà aggiunto\n")
-		else:
-			print("Rispondi solo con y/n")
+	else:
+		print("Va bene")
+
 	return(calendar)
+
 
 def convert_date(date):
 	lista_data = date.split('-')
@@ -58,12 +62,13 @@ def convert_date(date):
 	return(mese, giorno)
 
 def main():
-
-	print("Seleziona quali compleanni vuoi salvare, rispondi solo con y/n")
-	compleanni = obtain_birthdays()
-	cal = Calendar()
-	cal = populate_calendar(compleanni, cal)
-	save_cal(cal)
+	main_dialog = Dialog(dialog="dialog")
+	main_dialog.set_background_title("Creazione Calendario")
+	if (main_dialog.yesno("Vuoi creare un nuovo calendario?") == main_dialog.OK):
+		compleanni = obtain_birthdays()
+		cal = Calendar()
+		cal = populate_calendar(compleanni, cal, main_dialog)
+		save_cal(cal)
 
 
 
