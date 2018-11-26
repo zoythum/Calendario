@@ -1,19 +1,23 @@
+#!/usr/bin/env python
 from icalendar import Calendar, Event
 from datetime import datetime
 from dialog import Dialog
 import pytz
+import os
+
+ics_path = 'Path to ics file'
 
 def save_cal(calendar):
 	output_file = open('Compleanni.ics', 'wb')
 	output_file.write(calendar.to_ical())
 	output_file.close()
 
-def obtain_birthdays():
+def obtain_birthdays(path):
 	compleanni = {}
 	i = 0
 	k = 0
 	
-	with open('percorso del file .txt di partenza') as file:
+	with open(path) as file:
 		content = [line.rstrip('\n') for line in file]	
 
 	while i < len(content):
@@ -28,6 +32,27 @@ def obtain_birthdays():
 		k += 2
 
 	return(compleanni)
+
+
+def ics2text():
+	global ics_path
+	ics_file = open(ics_path, 'rb')
+	calendar = Calendar.from_ical(ics_file.read())
+	output = open('output.txt', 'w')
+	entries = {}
+
+	for event in calendar.walk('VEVENT'):
+		entries[event['SUMMARY']] = event['DTSTART'].dt
+
+	for key in entries:
+		output.write("Summary:     " + key)
+		output.write("\n")
+		output.write("Start:       " + str(entries[key]))
+		output.write("\n")
+	output.close()
+	return('output.txt')
+
+
 
 
 def populate_calendar(compleanni, calendar, main_dialog):
@@ -65,10 +90,12 @@ def main():
 	main_dialog = Dialog(dialog="dialog")
 	main_dialog.set_background_title("Creazione Calendario")
 	if (main_dialog.yesno("Vuoi creare un nuovo calendario?") == main_dialog.OK):
-		compleanni = obtain_birthdays()
+		path = ics2text()
+		compleanni = obtain_birthdays(path)
 		cal = Calendar()
 		cal = populate_calendar(compleanni, cal, main_dialog)
 		save_cal(cal)
+		os.remove("output.txt")
 
 
 
